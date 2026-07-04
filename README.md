@@ -24,38 +24,6 @@ works, as area.
 - **English ⇄ Bahasa Melayu** toggle, remembered between visits.
 - Responsive, keyboard-accessible, and respects reduced-motion.
 
-## Run it locally
-
-It's plain HTML/CSS/JS — no build step. Because the scanner loads a script and
-browsers restrict that on `file://`, serve it over a tiny local server:
-
-```bash
-# from the project folder
-python3 -m http.server 8000
-# then open http://localhost:8000
-```
-
-(Opening `index.html` directly mostly works, but the photo-scan feature needs
-the server.)
-
-## Deploy on GitHub Pages (free public URL)
-
-1. Create a new repository on GitHub, e.g. `quadvision`.
-2. Upload **everything in this folder** so `index.html` sits at the repo root:
-   ```
-   index.html
-   css/styles.css
-   js/...
-   assets/...
-   ```
-3. In the repo: **Settings → Pages**.
-4. Under **Build and deployment → Source**, choose **Deploy from a branch**.
-5. Branch: `main`, folder: `/ (root)`. Save.
-6. Wait ~1 minute. Your site appears at:
-   `https://<your-username>.github.io/quadvision/`
-
-Put that URL (and a QR code to it) on your poster so judges can try it live.
-
 ### Updating after deploy
 Just push changes to `main` — Pages rebuilds automatically.
 
