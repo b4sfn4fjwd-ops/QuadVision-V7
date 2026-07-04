@@ -59,26 +59,6 @@ Put that URL (and a QR code to it) on your poster so judges can try it live.
 ### Updating after deploy
 Just push changes to `main` — Pages rebuilds automatically.
 
-## Replace the team photos
-
-The team section uses placeholder avatars in `assets/team/`. To use real
-photos, replace these files (keep the same names, or update the `src` in
-`index.html`):
-
-```
-assets/team/lecturer.svg   → your lecturer
-assets/team/member1.svg    → team leader (Ketua Kumpulan)
-assets/team/member2.svg    → member
-assets/team/member3.svg    → member
-assets/team/member4.svg    → member
-assets/team/member5.svg    → member
-```
-
-You can drop in `.jpg`/`.png` instead of `.svg`. If you do, update the matching
-`<img src="...">` in the **team** section of `index.html`, and edit the names:
-each member block has a `<div class="name">` (currently "Name") and a role.
-Square photos look best (they're cropped to a square).
-
 ## File layout
 
 ```
