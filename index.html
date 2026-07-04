@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuadVision — See the square behind the equation</title>
+  <meta name="description" content="A bilingual learning tool that solves quadratic equations step by step and shows the real square forming, tile by tile, beside its parabola." />
+
+  <!-- set the colour theme before first paint (no flash of light) -->
+  <!-- This runs immediately so the page doesn't flash light mode before switching to dark -->
+  <script>
+    (function () {
+      try {
+        // Try to get the saved theme preference
+        var t = localStorage.getItem('qv-theme');
+        // Default to light if not set or invalid
+        if (t !== 'dark' && t !== 'light') t = 'light';
+        // Apply the theme before the page renders
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- apply saved accessibility preferences before first paint (no flash) -->
+  <!-- mirrors js/a11y.js so colourblind palette, text size, contrast, reading -->
+  <!-- mode and motion are correct from the very first frame -->
+  <script>
+    (function () {
+      try {
+        var a = JSON.parse(localStorage.getItem('qv-a11y-v1') || '{}');
+        var el = document.documentElement;
+        el.setAttribute('data-motion', a.motion || 'full');
+        el.setAttribute('data-text', a.text || 'normal');
+        el.setAttribute('data-contrast', a.contrast || 'off');
+        el.setAttribute('data-cb', a.cb || 'none');
+        el.setAttribute('data-dyslexia', a.dyslexia || 'off');
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- favicon / icons -->
+  <link rel="icon" href="assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+
+  <!-- type: Fredoka (display) + Nunito (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip" href="#solve">Skip to the solver</a>
+
+  <!-- ===== TOP BAR =====  Logo, the section menu, and the EN/BM + day/night switches. -->
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#top">
+        <img src="assets/logo.png" alt="QuadVision logo" />
+        <b>Quad<span>Vision</span></b>
+      </a>
+      <nav class="nav" aria-label="Sections">
+        <a href="#solve" data-i18n="nav_solve">Solve</a>
+        <a href="#play" data-i18n="nav_play">Play</a>
+        <a href="#apps" data-i18n="nav_apps">Real life</a>
+        <a href="#scan" data-i18n="nav_scan">Scan</a>
+      </nav>
+      <div class="lang" role="group" aria-label="Language">
+        <button id="langEN" type="button" aria-pressed="true">EN</button>
+        <button id="langMS" type="button" aria-pressed="false">BM</button>
+      </div>
+      <button id="themeToggle" class="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Switch to dark mode">
+        <span class="th-track">
+          <span class="th-ico th-sun" aria-hidden="true">☀</span>
+          <span class="th-ico th-moon" aria-hidden="true">☾</span>
+          <span class="th-knob"></span>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===== LANDING HERO ===== Full-screen first impression -->
+    <section class="hero" id="home" aria-label="Welcome" style="position: relative; overflow: hidden;">
+      <!-- 3D Math Geometry Background -->
+      <div id="three-container" aria-hidden="true" style="position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.7;"></div>
+      
+      <div class="wrap center" style="padding-top: 120px; padding-bottom: 90px; text-align: center; position: relative; z-index: 1;">
+        <span class="tagchip" style="margin: 0 auto 20px auto;"><span class="star">★</span> <span data-i18n="hx_chip">Interactive mathematics, made visible</span></span>
+        <h1 class="hx-title" data-i18n="hx_title" style="font-size: 3.5rem; margin-bottom: 24px;">See Mathematics <em style="background:linear-gradient(135deg,var(--lav-strong,#7a5cf0),var(--pink-strong,#e0609a));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Come Alive</em></h1>
+        <p class="lede hx-lede" data-i18n="hx_lede" style="max-width: 650px; margin: 0 auto 35px auto; font-size: 1.25rem;">Transform abstract quadratic equations into interactive geometric experiences. Learn the Completing the Square method through visualization, animation, and exploration — not memorization.</p>
+        <div class="hx-cta" style="display: flex; justify-content: center;">
+          <a href="#solve" class="btn btn-primary btn-hero" data-i18n="hx_cta1">Visualize My First Equation</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== highlights: three big claims (Apple-style) ===== -->
+    <section class="highlights section">
+      <div class="wrap">
+        <div class="sec-head center reveal">
+          <span class="eyebrow" data-i18n="hl_eyebrow">Why it works</span>
+          <h2 data-i18n="hl_title">Built to make the square obvious.</h2>
+        </div>
+        <div class="hl-grid">
+          <article class="hl-card reveal">
+            <div class="hl-ico" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><rect x="9" y="9" width="20" height="20" rx="4" fill="var(--viz-sq)" stroke="var(--viz-sq-edge)" stroke-width="2"/><rect x="29" y="9" width="10" height="20" rx="3" fill="var(--viz-strip)" stroke="var(--viz-strip-edge)" stroke-width="2"/><rect x="29" y="29" width="10" height="10" rx="3" fill="var(--viz-corner)" stroke="var(--viz-corner-edge)" stroke-width="2"/></svg>
+            </div>
+            <h3 data-i18n="hl_1_t">See it, don’t memorise it</h3>
+            <p data-i18n="hl_1_d">Algebra tiles form a real square, so completing the square finally makes sense.</p>
+          </article>
+          <article class="hl-card reveal">
+            <div class="hl-ico" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><rect x="10" y="26" width="28" height="10" rx="3" fill="var(--lav-soft)" stroke="var(--brand)" stroke-width="2"/><rect x="14" y="17" width="20" height="10" rx="3" fill="var(--viz-strip)" stroke="var(--viz-strip-edge)" stroke-width="2"/><rect x="18" y="8" width="12" height="10" rx="3" fill="var(--viz-sq)" stroke="var(--viz-sq-edge)" stroke-width="2"/></svg>
+            </div>
+            <h3 data-i18n="hl_2_t">Two languages</h3>
+            <p data-i18n="hl_2_d">Every step reads in English and Bahasa Melayu, switchable any time.</p>
+          </article>
+          <article class="hl-card reveal">
+            <div class="hl-ico" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><circle cx="24" cy="20" r="11" fill="var(--gold-soft, #ffe9b3)" stroke="var(--pink-strong)" stroke-width="2.5"/><path d="M24 13 l2.2 4.4 4.8.7-3.5 3.4.8 4.8-4.3-2.2-4.3 2.2.8-4.8-3.5-3.4 4.8-.7z" fill="var(--pink-strong)"/><path d="M18 30 l-4 12 6-3 4 3-2-12 M30 30 l4 12-6-3-4 3 2-12" fill="var(--viz-strip)" stroke="var(--viz-strip-edge)" stroke-width="1.4"/></svg>
+            </div>
+            <h3 data-i18n="hl_3_t">Guided, step by step</h3>
+            <p data-i18n="hl_3_d">Play it like a story, or move through each step at your own pace.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MEET SQUARY ===== the guide introduces himself (the real mascot walks over). -->
+    <section class="meet section" id="meet">
+      <div class="wrap">
+        <div class="mascot-card">
+          <div id="squaryDock" class="squary-dock" aria-hidden="true"></div>
+          <div class="meet-copy">
+            <h2 data-i18n="meet_t">Meet Squary — your guide</h2>
+            <div class="squotes">
+              <p class="squote" data-i18n="meet_1">“Hi! I’m Squary.”</p>
+              <p class="squote" data-i18n="meet_2">“I’ll help you see mathematics in a completely different way.”</p>
+              <p class="squote" data-i18n="meet_3">“Let’s complete our first square together.”</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SOLVER (the studio’s front desk) ===== -->
+    <section class="solvezone section" id="solve">
+      <div class="wrap">
+        <div class="sec-head center">
+          <span class="eyebrow" data-i18n="sv_eyebrow">Your turn</span>
+          <h2 data-i18n="sv_title">Type any quadratic. Watch it become a square.</h2>
+        </div>
+
+        <div class="solver" aria-label="Quadratic solver">
+          <h3 data-i18n="eq_preview">Your equation</h3>
+          <div class="coef-row">
+            <div class="coef">
+              <label for="inA" data-i18n="lab_a">a</label>
+              <input id="inA" type="number" inputmode="decimal" value="1" step="any" aria-label="coefficient a" />
+            </div>
+            <div class="coef">
+              <label for="inB" data-i18n="lab_b">b</label>
+              <input id="inB" type="number" inputmode="decimal" value="-5" step="any" aria-label="coefficient b" />
+            </div>
+            <div class="coef">
+              <label for="inC" data-i18n="lab_c">c</label>
+              <input id="inC" type="number" inputmode="decimal" value="6" step="any" aria-label="coefficient c" />
+            </div>
+          </div>
+
+          <div class="eq-line"><small data-i18n="eq_preview">Your equation</small><span id="eqPreview">x² − 5x + 6 = 0</span></div>
+
+          <div class="btn-row">
+            <button id="btnVisualise" class="btn btn-primary" type="button"><span data-i18n="visualise">Visualise</span></button>
+            <button id="btnReset" class="btn btn-ghost" type="button"><span data-i18n="reset">Reset</span></button>
+          </div>
+
+          <div class="examples">
+            <span data-i18n="try_example">Try an example</span>
+            <div class="chips">
+              <button class="chip" data-ex="1,-5,6" type="button">x² − 5x + 6</button>
+              <button class="chip" data-ex="1,-4,4" type="button">x² − 4x + 4</button>
+              <button class="chip" data-ex="2,-7,3" type="button">2x² − 7x + 3</button>
+              <button class="chip" data-ex="1,0,-9" type="button">x² − 9</button>
+              <button class="chip" data-ex="1,2,5" type="button">x² + 2x + 5</button>
+            </div>
+          </div>
+
+          <div class="summary" aria-live="polite">
+            <div class="cell full">
+              <div>
+                <div class="k" data-i18n="sum_roots">Roots</div>
+                <div class="v" id="sumRoots">x = 2 , 3</div>
+              </div>
+              <span class="badge two" id="rootsBadge">Two real roots</span>
+            </div>
+            <div class="cell">
+              <div class="k" data-i18n="sum_disc">Discriminant</div>
+              <div class="v" id="sumDisc">b² − 4ac = 1</div>
+            </div>
+            <div class="cell">
+              <div class="k" data-i18n="sum_axis">Axis of symmetry</div>
+              <div class="v" id="sumAxis">x = 2.5</div>
+            </div>
+            <div class="cell full">
+              <div class="k" data-i18n="sum_vertex">Vertex</div>
+              <div class="v" id="sumVertex">(2.5, −0.25)</div>
+            </div>
+            <div class="cell full">
+              <div class="k" data-i18n="sum_vform">Vertex form</div>
+              <div class="v" id="sumVForm">(x − 2.5)² − 0.25</div>
+            </div>
+            <div class="cell full">
+              <div class="k" data-i18n="sum_sform">Standard form</div>
+              <div class="v" id="sumStdForm">x² − 5x + 6</div>
+            </div>
+          </div>
+      </div>
+    </section>
+
+    <!-- ===== STUDIO (our novelty) =====  Left: the tile picture that completes the square. Right: the matching graph. The Play/Next buttons step through it. -->
+    <section class="studio section" id="studio">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-i18n="studio_title">The square, forming</span>
+          <h2 data-i18n="studio_sub">Completing the square, shown as area.</h2>
+        </div>
+        <div class="studio-grid">
+          <div class="panel feature">
+            <div class="panel-head">
+              <h3 data-i18n="studio_title">The square, forming</h3>
+              <span class="step-count" id="stepCounter">Step 1 / 7</span>
+            </div>
+            <div class="stage">
+              <canvas id="vizCanvas" aria-label="Algebra tiles completing the square"></canvas>
+            </div>
+            <div class="legend">
+              <span><i class="l-sq"></i> <span data-i18n="legend_sq">x² square</span></span>
+              <span><i class="l-strip"></i> <span data-i18n="legend_strip">half-strips (b⁄2 · x)</span></span>
+              <span><i class="l-corner"></i> <span data-i18n="legend_corner">added corner (b⁄2)²</span></span>
+            </div>
+
+            <div class="walk">
+              <div class="walk-step">
+                <div class="st-title" id="stepTitle">Write the equation</div>
+                <div class="st-note" id="stepNote">Start from the standard form.</div>
+                <div class="st-math" id="stepMath"></div>
+              </div>
+              <div class="walk-ctrl">
+                <div class="dots" id="stepDots" role="group" aria-label="Steps"></div>
+                <button id="btnPrev" class="icon-btn" type="button" aria-label="Previous step">‹</button>
+                <button id="btnPlay" class="btn-play" type="button"><span class="ico">►</span><span class="label" data-i18n="play">Play</span></button>
+                <button id="btnNext" class="icon-btn" type="button" aria-label="Next step">›</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3 data-i18n="graph_title">On the graph</h3>
+              <span class="sub" data-i18n="graph_sub">Where the curve meets the x-axis.</span>
+            </div>
+            <div class="stage graph-stage">
+              <canvas id="graphCanvas" aria-label="Parabola of the quadratic"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PLAY =====  Our interactive game, made in Genially and embedded inline (never leaves the page). -->
+    <section class="challenge section" id="play">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-i18n="play_eyebrow">Play</span>
+          <h2 data-i18n="play_title">Play the quadratics game</h2>
+          <p data-i18n="play_sub">An interactive game to practise — embedded right here, no need to leave the page.</p>
+        </div>
+        <div id="gamesMount" class="games-mount"></div>
+      </div>
+    </section>
+
+    <!-- ===== REAL-LIFE APPLICATIONS =====  Five interactive parabola scenes from sport, physics, engineering, architecture and economics. -->
+    <section class="apps section" id="apps">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-i18n="apps_eyebrow">Where it lives</span>
+          <h2 data-i18n="apps_title">Quadratics in the real world</h2>
+          <p data-i18n="apps_sub">Move the slider and watch the parabola change in a real setting — the vertex and roots mean something here.</p>
+        </div>
+        <div class="apps-tabs" id="appsTabs" role="tablist"></div>
+        <div class="apps-card">
+          <div class="apps-canvas-wrap"><canvas id="appsCanvas" aria-label="Application graph"></canvas></div>
+          <div class="apps-info">
+            <h3 id="appTitle">—</h3>
+            <p id="appDesc">—</p>
+            <div class="app-eq" id="appEq">—</div>
+            <div class="app-slider-row">
+              <label class="app-slider">
+                <span id="appSliderLabel">—</span>
+                <input type="range" id="appSlider" min="0" max="10" value="5" />
+              </label>
+            </div>
+            <button class="app-play" id="appPlay" type="button">
+              <span class="ap-ico">▶</span><span id="appPlayLabel" data-i18n="apps_play">Play motion</span>
+            </button>
+            <div class="app-readout" id="appReadout" aria-live="polite">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCAN =====  Take/upload a photo of a quadratic; the app reads it and fills a, b, c automatically. -->
+    <section class="scan section" id="scan">
+      <div class="wrap scan-grid">
+        <div class="scan-card">
+          <div class="scan-drop">
+            <div class="big" data-i18n="scan_title">Scan a question</div>
+            <div class="tip" data-i18n="scan_tip">Tip: clear printed text like 2x² + 3x − 5 = 0 works best.</div>
+            <div class="scan-actions">
+              <button id="btnUpload" class="btn btn-primary" type="button"><span data-i18n="scan_upload">Upload photo</span></button>
+              <button id="btnCamera" class="btn btn-ghost" type="button"><span data-i18n="scan_camera">Use camera</span></button>
+            </div>
+          </div>
+          <input id="scanInput" type="file" accept="image/*" hidden />
+          <input id="camInput" type="file" accept="image/*" capture="environment" hidden />
+
+          <div class="scan-status" id="scanStatus" aria-live="polite"></div>
+          <div class="bar-wrap" id="scanBarWrap" hidden><div class="bar" id="scanBar"></div></div>
+
+          <div class="scan-result" id="scanResult" hidden>
+            <div class="seen" data-i18n="scan_seen">Text detected</div>
+            <div class="raw" id="scanText">—</div>
+            <div class="found-eq" id="scanEq">—</div>
+            <div class="scan-actions" style="justify-content:flex-start">
+              <button id="btnUseScan" class="btn btn-primary" type="button"><span data-i18n="scan_use">Use these values</span></button>
+              <button id="btnRetry" class="btn btn-ghost" type="button"><span data-i18n="scan_retry">Try another photo</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="scan-side">
+          <div class="sec-head">
+            <span class="eyebrow" data-i18n="nav_scan">Scan</span>
+            <h2 data-i18n="scan_title">Scan a question</h2>
+            <p data-i18n="scan_sub">Point your camera at a printed quadratic, or upload a photo. QuadVision reads it and fills a, b and c for you.</p>
+          </div>
+          <ol class="scan-steps">
+            <li><span class="n">1</span><span class="tx" data-i18n="scan_upload">Upload photo</span></li>
+            <li><span class="n">2</span><span class="tx" data-i18n="scan_reading">Reading the image…</span></li>
+            <li><span class="n">3</span><span class="tx" data-i18n="scan_use">Use these values</span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LEARN =====  A short plain-language explanation of WHY completing the square works. -->
+    <section class="learn section" id="learn">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-i18n="nav_learn">Learn</span>
+          <h2 data-i18n="learn_title">Why completing the square works</h2>
+        </div>
+        <div class="learn-card">
+          <div class="learn-flow">
+            <p data-i18n="learn_p1">Every quadratic ax² + bx + c hides a perfect square. The x² term is a literal square of side x. The bx term is a strip of width b you can split in half and wrap around two sides of that square.</p>
+            <p data-i18n="learn_p2">Wrapping leaves one empty corner. Fill it with a small (b⁄2)² square and the whole shape becomes a clean square of side (x + b⁄2). That single idea turns any quadratic into (x + b⁄2)² = a number — and from there, x is one square-root away.</p>
+            <p data-i18n="learn_p3">It is also where the quadratic formula comes from: do this with letters instead of numbers and x = (−b ± √(b² − 4ac)) ⁄ 2a falls straight out.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TEAM =====  Our lecturer and the five group members (swap the placeholder photos/names here). -->
+    <section class="team section" id="team">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-i18n="team_title">The team</span>
+          <h2 data-i18n="team_sub">Introducing to our team</h2>
+        </div>
+        <div class="team-card">
+          <div class="lecturer-row">
+            <div class="member lecturer">
+              <div class="avatar lecturer-av"><img src="assets/team/lecturer.svg" alt="Supervising lecturer photo" /></div>
+              <div class="name">Sir Boon Kok Siong</div>
+              <div class="role" data-i18n="role_lecturer">Supervising lecturer</div>
+            </div>
+          </div>
+          <div class="members">
+            <div class="member lead">
+              <div class="avatar"><img src="assets/team/member1.svg" alt="Team member photo" /></div>
+              <div class="name">Liew Quan Kuan</div>
+              <div class="role" data-i18n="role_leader">Team leader</div>
+            </div>
+            <div class="member">
+              <div class="avatar"><img src="assets/team/member2.svg" alt="Team member photo" /></div>
+              <div class="name">Ho Kai Wen</div>
+              <div class="role" data-i18n="role_member">Member</div>
+            </div>
+            <div class="member">
+              <div class="avatar"><img src="assets/team/member3.svg" alt="Team member photo" /></div>
+              <div class="name">Han Song Ling</div>
+              <div class="role" data-i18n="role_member">Member</div>
+            </div>
+            <div class="member">
+              <div class="avatar"><img src="assets/team/member4.svg" alt="Team member photo" /></div>
+              <div class="name">Yang Guang Ron</div>
+              <div class="role" data-i18n="role_member">Member</div>
+            </div>
+            <div class="member">
+              <div class="avatar"><img src="assets/team/member5.svg" alt="Team member photo" /></div>
+              <div class="name">Lim Hong Rui</div>
+              <div class="role" data-i18n="role_member">Member</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== footer ===== -->
+  <footer class="foot">
+    <div class="wrap">
+      <img src="assets/logo.png" alt="QuadVision logo" />
+      <div>
+        <div class="ft" data-i18n="foot_built">QuadVision · Inovasi Lestari ke Arah Pendidikan Terbilang</div>
+        <div class="fs" data-i18n="foot_made">A learning tool for completing the square.</div>
+      </div>
+      <div class="credit">KMJ Innovation Expo 2026</div>
+    </div>
+  </footer>
+
+  <!-- Load scripts in dependency order so each one can use the ones before it -->
+  <!-- math-core.js first (the math engine, used by everything else) -->
+  <script src="js/math-core.js"></script>
+  <!-- i18n.js next (handles translations) -->
+  <script src="js/i18n.js"></script>
+  <!-- store.js: the shared progress/XP/badges memory (used by the games) -->
+  <script src="js/store.js"></script>
+  <!-- Canvas modules (visualizer and grapher) - these draw the pictures -->
+  <script src="js/visualizer.js"></script>
+  <script src="js/grapher.js"></script>
+  <!-- Scanner reads photos -->
+  <script src="js/scanner.js"></script>
+  <!-- NEW interactive features (each self-contained, wired up by app.js init) -->
+  <script src="js/mistakes.js"></script>     <!-- Common mistake detection -->
+  <script src="js/challenge.js"></script>    <!-- Gamified challenge + boss battles -->
+  <script src="js/applications.js"></script> <!-- Real-life applications -->
+  <script src="js/games.js"></script>        <!-- Built-in quadratic games (Play section) -->
+  <!-- Squary the mascot helper -->
+  <script src="js/squary.js"></script>
+  <!-- a11y.js: accessibility settings panel -->
+  <script src="js/a11y.js"></script>
+  <!-- bgfx.js: the decorative animated background (equations + 3D shapes) -->
+  <script src="js/bgfx.js"></script>
+
+  <script src="js/vendor/three.min.js"></script> <!-- WebGL engine -->
+  <script src="js/threefx.js"></script>          <!-- Hero geometric 3D animation -->
+  <script src="js/vendor/p5.min.js"></script>    <!-- p5.js engine -->
+  <script src="js/p5fx.js"></script>             <!-- Background math constellation -->
+  <script src="js/dungeon3d.js"></script>        <!-- HD-2D three.js renderer for Knight Dungeon -->
+  <!-- app.js is the main controller that ties everything together -->
+  <script src="js/app.js"></script>
+  <!-- ui.js adds polish (scroll effects, navigation highlighting) -->
+  <script src="js/ui.js"></script>
+  <!-- intro.js: the welcome / start screen that explains the tool -->
+  <script src="js/intro.js"></script>
+</body>
+</html>
